@@ -199,6 +199,20 @@ function chooseFromAlbum() {
 
 // 处理图片文件
 function handleImageFile(file) {
+    // 检查图片大小（限制为5MB）
+    const MAX_SIZE = 5 * 1024 * 1024; // 5MB
+    if (file.size > MAX_SIZE) {
+        showToast('图片大小不能超过5MB，请选择更小的图片', 'error');
+        return;
+    }
+    
+    // 检查图片格式
+    const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/jpg', 'image/gif'];
+    if (!ALLOWED_TYPES.includes(file.type)) {
+        showToast('只支持JPEG、PNG、GIF格式的图片', 'error');
+        return;
+    }
+    
     questionImage = file;
     
     // 显示图片预览
@@ -212,6 +226,12 @@ function handleImageFile(file) {
         // 进行OCR识别
         performOCR(file);
     };
+    
+    reader.onerror = function(error) {
+        showToast('图片读取失败，请重新选择图片', 'error');
+        console.error('图片读取错误:', error);
+    };
+    
     reader.readAsDataURL(file);
     
     // 进入下一步
