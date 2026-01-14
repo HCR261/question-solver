@@ -31,6 +31,14 @@ module.exports = async (req, res) => {
             });
         }
         
+        // 检查base64数据长度（防止过大的请求）
+        if (imageBase64.length > 15 * 1024 * 1024) { // 约15MB的base64数据（对应约10MB的图片）
+            return res.status(413).json({ 
+                success: false, 
+                error: '图片数据过大，请选择更小的图片' 
+            });
+        }
+        
         // 你的百度OCR API配置 - 直接硬编码在这里
         const API_KEY = 'jDQiW43XHiMbkaJh5Q1jMbnZ';
         const SECRET_KEY = 'bcfiSyNMLQL3k0tOaxbr1GLZSSImeix1';
