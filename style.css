@@ -1,0 +1,408 @@
+/* 基础设置 */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: Arial, sans-serif;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    min-height: 100vh;
+    padding: 20px;
+}
+
+/* 加载动画 */
+.loading {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    color: white;
+    text-align: center;
+}
+
+.spinner {
+    width: 50px;
+    height: 50px;
+    border: 5px solid rgba(255, 255, 255, 0.3);
+    border-top-color: white;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin-bottom: 20px;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+/* 步骤页面 */
+.step {
+    display: none;
+    min-height: 100vh;
+    background: white;
+    border-radius: 20px;
+    padding: 20px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+}
+
+.step.active {
+    display: block;
+}
+
+/* 欢迎界面 */
+.welcome {
+    text-align: center;
+    padding: 40px 20px;
+}
+
+.welcome h1 {
+    color: #333;
+    margin-bottom: 10px;
+    font-size: 24px;
+}
+
+.welcome p {
+    color: #666;
+    margin-bottom: 40px;
+}
+
+/* 大按钮 */
+.big-button {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 20px;
+    border-radius: 15px;
+    margin: 30px auto;
+    width: 90%;
+    max-width: 300px;
+    font-size: 20px;
+    font-weight: bold;
+    cursor: pointer;
+    box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+}
+
+.big-button i {
+    font-size: 24px;
+    margin-right: 10px;
+}
+
+/* 使用说明 */
+.instructions {
+    display: flex;
+    justify-content: space-around;
+    margin-top: 40px;
+}
+
+.instruction {
+    text-align: center;
+}
+
+.instruction .num {
+    width: 40px;
+    height: 40px;
+    background: #667eea;
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 10px;
+    font-weight: bold;
+}
+
+/* 头部 */
+.header {
+    display: flex;
+    align-items: center;
+    margin-bottom: 30px;
+}
+
+.back-btn {
+    background: none;
+    border: none;
+    font-size: 20px;
+    color: #667eea;
+    cursor: pointer;
+    margin-right: 15px;
+}
+
+.header h2 {
+    color: #333;
+    font-size: 20px;
+}
+
+/* 选择按钮 */
+.choice-buttons {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 15px;
+    margin: 20px 0;
+}
+
+.choice-btn {
+    background: white;
+    border: 2px solid #e0e0e0;
+    border-radius: 15px;
+    padding: 20px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.choice-btn:hover {
+    border-color: #667eea;
+    transform: translateY(-5px);
+}
+
+.choice-btn .icon {
+    width: 60px;
+    height: 60px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 15px;
+    font-size: 24px;
+}
+
+/* 科目按钮 */
+.subject-buttons {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+    margin: 20px 0 40px;
+}
+
+.subject-btn {
+    padding: 15px 10px;
+    border: 2px solid #e0e0e0;
+    border-radius: 10px;
+    background: white;
+    font-size: 16px;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+.subject-btn i {
+    font-size: 24px;
+    margin-bottom: 5px;
+    color: #667eea;
+}
+
+.subject-btn.active {
+    background: #667eea;
+    color: white;
+    border-color: #667eea;
+}
+
+.subject-btn.active i {
+    color: white;
+}
+
+/* 学段按钮 */
+.grade-buttons {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    margin: 20px 0 40px;
+}
+
+.grade-btn {
+    padding: 15px 5px;
+    border: 2px solid #e0e0e0;
+    border-radius: 10px;
+    background: white;
+    font-size: 16px;
+    cursor: pointer;
+}
+
+.grade-btn.active {
+    background: #667eea;
+    color: white;
+    border-color: #667eea;
+}
+
+/* 下一步按钮 */
+.next-btn {
+    width: 100%;
+    padding: 15px;
+    background: #667eea;
+    color: white;
+    border: none;
+    border-radius: 10px;
+    font-size: 18px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.next-btn:disabled {
+    background: #cccccc;
+    cursor: not-allowed;
+}
+
+/* 题目预览 */
+.question-preview {
+    background: #f8f9fa;
+    border-radius: 10px;
+    padding: 20px;
+    margin: 20px 0;
+    border-left: 5px solid #667eea;
+}
+
+.question-preview h3 {
+    color: #333;
+    margin-bottom: 10px;
+}
+
+.question-preview p {
+    color: #555;
+    line-height: 1.6;
+}
+
+/* AI解题按钮 */
+.ai-btn {
+    width: 100%;
+    padding: 20px;
+    background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+    color: white;
+    border: none;
+    border-radius: 15px;
+    font-size: 20px;
+    font-weight: bold;
+    cursor: pointer;
+    margin: 20px 0;
+    box-shadow: 0 5px 15px rgba(40, 167, 69, 0.4);
+}
+
+.ai-btn i {
+    margin-right: 10px;
+}
+
+/* 加载AI */
+.spinner-small {
+    width: 30px;
+    height: 30px;
+    border: 3px solid rgba(102, 126, 234, 0.3);
+    border-top-color: #667eea;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin: 20px auto;
+}
+
+/* 解题结果 */
+.solution {
+    background: #f0f9ff;
+    border-radius: 10px;
+    padding: 20px;
+    margin: 20px 0;
+    border: 2px solid #667eea;
+}
+
+.solution h3 {
+    color: #333;
+    margin-bottom: 15px;
+}
+
+#solutionText {
+    color: #555;
+    line-height: 1.8;
+    margin-bottom: 20px;
+}
+
+.save-btn {
+    width: 100%;
+    padding: 15px;
+    background: #ffc107;
+    color: #333;
+    border: none;
+    border-radius: 10px;
+    font-size: 18px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.save-btn i {
+    margin-right: 10px;
+}
+
+/* 配置弹窗 */
+.modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.modal-content {
+    background: white;
+    padding: 30px;
+    border-radius: 15px;
+    width: 90%;
+    max-width: 400px;
+    text-align: center;
+}
+
+.input-group {
+    margin: 20px 0;
+    text-align: left;
+}
+
+.input-group label {
+    display: block;
+    margin-bottom: 5px;
+    color: #333;
+    font-weight: bold;
+}
+
+.input-group input {
+    width: 100%;
+    padding: 10px;
+    border: 2px solid #e0e0e0;
+    border-radius: 8px;
+    font-size: 16px;
+}
+
+.modal-content button {
+    width: 100%;
+    padding: 15px;
+    background: #667eea;
+    color: white;
+    border: none;
+    border-radius: 10px;
+    font-size: 18px;
+    font-weight: bold;
+    cursor: pointer;
+    margin-top: 20px;
+}
+
+/* 移动端优化 */
+@media (max-width: 480px) {
+    body {
+        padding: 10px;
+    }
+    
+    .choice-buttons {
+        grid-template-columns: 1fr;
+    }
+    
+    .subject-buttons {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .grade-buttons {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}

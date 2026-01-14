@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>错题本AI助手</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <!-- 加载动画 -->
+    <div id="loading" class="loading">
+        <div class="spinner"></div>
+        <p>加载中...</p>
+    </div>
+
+    <!-- 主应用 -->
+    <div id="app" style="display:none;">
+        <!-- 第一步：欢迎界面 -->
+        <div id="step1" class="step active">
+            <div class="welcome">
+                <h1><i class="fas fa-graduation-cap"></i> 错题本AI助手</h1>
+                <p>碰一碰NFC标签开始</p>
+                
+                <!-- 大按钮 -->
+                <div class="big-button" onclick="goToStep(2)">
+                    <i class="fas fa-play"></i>
+                    <span>开始使用</span>
+                </div>
+                
+                <!-- 使用说明 -->
+                <div class="instructions">
+                    <div class="instruction">
+                        <div class="num">1</div>
+                        <p>拍照错题</p>
+                    </div>
+                    <div class="instruction">
+                        <div class="num">2</div>
+                        <p>AI解题</p>
+                    </div>
+                    <div class="instruction">
+                        <div class="num">3</div>
+                        <p>保存记录</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 第二步：选择如何获取题目 -->
+        <div id="step2" class="step">
+            <div class="header">
+                <button class="back-btn" onclick="goToStep(1)">
+                    <i class="fas fa-arrow-left"></i>
+                </button>
+                <h2>第一步：获取题目</h2>
+            </div>
+            
+            <!-- 两个大按钮 -->
+            <div class="choice-buttons">
+                <div class="choice-btn" onclick="takePhoto()">
+                    <div class="icon">
+                        <i class="fas fa-camera"></i>
+                    </div>
+                    <h3>拍照</h3>
+                    <p>直接拍照错题</p>
+                </div>
+                
+                <div class="choice-btn" onclick="chooseFromAlbum()">
+                    <div class="icon">
+                        <i class="fas fa-image"></i>
+                    </div>
+                    <h3>相册</h3>
+                    <p>从相册选择图片</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- 第三步：选择科目 -->
+        <div id="step3" class="step">
+            <div class="header">
+                <button class="back-btn" onclick="goToStep(2)">
+                    <i class="fas fa-arrow-left"></i>
+                </button>
+                <h2>第二步：选择科目</h2>
+            </div>
+            
+            <!-- 科目按钮 -->
+            <div class="subject-buttons">
+                <button class="subject-btn active" onclick="selectSubject('数学')">
+                    <i class="fas fa-calculator"></i> 数学
+                </button>
+                <button class="subject-btn" onclick="selectSubject('物理')">
+                    <i class="fas fa-atom"></i> 物理
+                </button>
+                <button class="subject-btn" onclick="selectSubject('化学')">
+                    <i class="fas fa-flask"></i> 化学
+                </button>
+                <button class="subject-btn" onclick="selectSubject('语文')">
+                    <i class="fas fa-book"></i> 语文
+                </button>
+                <button class="subject-btn" onclick="selectSubject('英语')">
+                    <i class="fas fa-language"></i> 英语
+                </button>
+                <button class="subject-btn" onclick="selectSubject('其他')">
+                    <i class="fas fa-ellipsis-h"></i> 其他
+                </button>
+            </div>
+            
+            <button class="next-btn" onclick="goToStep(4)" disabled>
+                下一步
+            </button>
+        </div>
+
+        <!-- 第四步：选择学段 -->
+        <div id="step4" class="step">
+            <div class="header">
+                <button class="back-btn" onclick="goToStep(3)">
+                    <i class="fas fa-arrow-left"></i>
+                </button>
+                <h2>第三步：选择学段</h2>
+            </div>
+            
+            <!-- 学段按钮 -->
+            <div class="grade-buttons">
+                <button class="grade-btn" onclick="selectGrade('小学')">小学</button>
+                <button class="grade-btn active" onclick="selectGrade('初中')">初中</button>
+                <button class="grade-btn" onclick="selectGrade('高中')">高中</button>
+                <button class="grade-btn" onclick="selectGrade('大学')">大学</button>
+                <button class="grade-btn" onclick="selectGrade('其他')">其他</button>
+            </div>
+            
+            <button class="next-btn" onclick="goToStep(5)" disabled>
+                下一步
+            </button>
+        </div>
+
+        <!-- 第五步：AI解题 -->
+        <div id="step5" class="step">
+            <div class="header">
+                <button class="back-btn" onclick="goToStep(4)">
+                    <i class="fas fa-arrow-left"></i>
+                </button>
+                <h2>第四步：AI解题</h2>
+            </div>
+            
+            <!-- 题目预览 -->
+            <div class="question-preview">
+                <h3><i class="fas fa-question-circle"></i> 题目</h3>
+                <p id="questionText">这里会显示你的题目...</p>
+            </div>
+            
+            <!-- AI解题按钮 -->
+            <button class="ai-btn" onclick="solveWithAI()">
+                <i class="fas fa-robot"></i> AI解题
+            </button>
+            
+            <!-- 加载中 -->
+            <div id="loadingAI" style="display:none;">
+                <div class="spinner-small"></div>
+                <p>AI正在思考...</p>
+            </div>
+            
+            <!-- 解题结果 -->
+            <div id="solution" class="solution" style="display:none;">
+                <h3><i class="fas fa-check-circle"></i> 解答</h3>
+                <div id="solutionText"></div>
+                <button class="save-btn" onclick="saveQuestion()">
+                    <i class="fas fa-save"></i> 保存错题
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- API配置弹窗 -->
+    <div id="configModal" class="modal" style="display:none;">
+        <div class="modal-content">
+            <h3>API配置</h3>
+            <p>第一次使用需要配置API密钥</p>
+            
+            <div class="input-group">
+                <label>百度OCR API Key:</label>
+                <input type="text" id="ocrKey" placeholder="输入百度OCR的API Key">
+            </div>
+            
+            <div class="input-group">
+                <label>DeepSeek API Key:</label>
+                <input type="text" id="aiKey" placeholder="输入DeepSeek的API Key">
+            </div>
+            
+            <button onclick="saveConfig()">保存</button>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
