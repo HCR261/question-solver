@@ -5,6 +5,56 @@ let selectedGrade = null;
 let questionText = "";
 let questionImage = null;
 
+// Toast提示函数
+function showToast(message, type = 'info') {
+    // 如果已经有toast，先移除
+    const existingToast = document.querySelector('.toast');
+    if (existingToast) {
+        existingToast.remove();
+    }
+    
+    // 创建toast元素
+    const toast = document.createElement('div');
+    toast.className = 'toast';
+    toast.textContent = message;
+    
+    // 样式
+    toast.style.cssText = `
+        position: fixed;
+        top: 20px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: ${type === 'error' ? '#dc3545' : type === 'success' ? '#28a745' : '#007bff'};
+        color: white;
+        padding: 12px 24px;
+        border-radius: 8px;
+        z-index: 1000;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        font-size: 14px;
+        opacity: 0;
+        transition: opacity 0.3s;
+        max-width: 80%;
+        text-align: center;
+    `;
+    
+    document.body.appendChild(toast);
+    
+    // 显示
+    setTimeout(() => {
+        toast.style.opacity = '1';
+    }, 10);
+    
+    // 3秒后移除
+    setTimeout(() => {
+        toast.style.opacity = '0';
+        setTimeout(() => {
+            if (toast.parentNode) {
+                toast.remove();
+            }
+        }, 300);
+    }, 3000);
+}
+
 // 页面加载完成后运行
 window.onload = function() {
     // 隐藏加载界面，显示应用
@@ -28,6 +78,7 @@ function checkNFC() {
     if (nfc === 'true') {
         // 如果是NFC启动，显示提示并自动开始
         document.querySelector('.welcome p').textContent = 'NFC标签启动成功！';
+        showToast('NFC标签启动成功！', 'success');
         
         setTimeout(() => {
             goToStep(2);
@@ -55,11 +106,11 @@ function showConfigModal() {
 
 // 保存配置
 function saveConfig() {
-    const ocrKey = document.getElementById('ocrKey').value;
-    const aiKey = document.getElementById('aiKey').value;
+    const ocrKey = document.getElementById('ocrKey').value.trim();
+    const aiKey = document.getElementById('aiKey').value.trim();
     
     if (!ocrKey || !aiKey) {
-        alert('请填写所有API密钥！');
+        showToast('请填写所有API密钥！', 'error');
         return;
     }
     
@@ -67,7 +118,7 @@ function saveConfig() {
     localStorage.setItem('aiKey', aiKey);
     
     document.getElementById('configModal').style.display = 'none';
-    alert('配置保存成功！');
+    showToast('配置保存成功！', 'success');
 }
 
 // 切换步骤
@@ -153,9 +204,10 @@ function handleImageFile(file) {
     // 显示图片预览
     const reader = new FileReader();
     reader.onload = function(e) {
-        // 在界面上显示图片（可选）
+        // 在界面上显示图片
         document.getElementById('questionText').innerHTML = 
-            `<img src="${e.target.result}" style="max-width:100%; border-radius:10px;" alt="题目图片">`;
+            `<img src="${e.target.result}" style="max-width:100%; border-radius:10px; margin:10px 0;" alt="题目图片">
+             <p style="margin-top:10px; color:#666;">正在识别图片中的文字...</p>`;
         
         // 进行OCR识别
         performOCR(file);
@@ -164,45 +216,6 @@ function handleImageFile(file) {
     
     // 进入下一步
     goToStep(3);
-}
-
-// 执行OCR识别
-async function performOCR(file) {
-    const ocrKey = localStorage.getItem('ocrKey');
-    if (!ocrKey) {
-        showConfigModal();
-        return;
-    }
-    
-    // 显示识别中
-    document.getElementById('questionText').innerHTML = '正在识别文字...';
-    
-    try {
-        // 将图片转换为base64
-        const base64 = await fileToBase64(file);
-        
-        // 这里简化处理：实际应该调用百度OCR API
-        // 由于是教学，我们先用模拟数据
-        setTimeout(() => {
-            // 模拟OCR结果
-            const mockQuestions = [
-                "已知函数 f(x) = 2x² - 3x + 1，求 f(2) 的值。",
-                "解方程：3x + 5 = 2x + 12",
-                "计算：(2+3)×4÷2 = ?",
-                "一个圆的半径是5cm，求面积（π取3.14）",
-                "What is the capital of France?"
-            ];
-            
-            const randomText = mockQuestions[Math.floor(Math.random() * mockQuestions.length)];
-            questionText = randomText;
-            
-            document.getElementById('questionText').textContent = randomText;
-        }, 2000);
-        
-    } catch (error) {
-        console.error('OCR失败:', error);
-        document.getElementById('questionText').textContent = '识别失败，请手动输入';
-    }
 }
 
 // 文件转base64
@@ -215,87 +228,247 @@ function fileToBase64(file) {
     });
 }
 
+// 执行OCR识别
+async function performOCR(file) {
+    const ocrKey = localStorage.getItem('ocrKey');
+    if (!ocrKey) {
+        showConfigModal();
+        showToast('请先配置百度OCR API密钥', 'error');
+        return;
+    }
+    
+    try {
+        // 将图片转换为base64
+        const base64 = await fileToBase64(file);
+        // 移除data:image/png;base64,前缀
+        const pureBase64 = base64.split(',')[1];
+        
+        if (!pureBase64) {
+            throw new Error('图片转换失败');
+        }
+        
+        showToast('正在调用百度OCR识别文字...', 'info');
+        
+        // 调用我们的API接口
+        const response = await fetch('/api/ocr', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                imageBase64: pureBase64
+            })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            questionText = data.text;
+            document.getElementById('questionText').innerHTML = 
+                `<strong>识别结果：</strong><br><br>` + 
+                data.text.replace(/\n/g, '<br>');
+            showToast('文字识别成功！', 'success');
+        } else {
+            throw new Error(data.error || '识别失败');
+        }
+        
+    } catch (error) {
+        console.error('OCR失败:', error);
+        showToast('文字识别失败：' + error.message, 'error');
+        
+        // 显示错误但允许继续
+        document.getElementById('questionText').innerHTML = 
+            `<strong>识别失败，请手动输入题目：</strong><br><br>
+             <textarea id="manualInput" style="width:100%; height:100px; padding:10px; border:1px solid #ddd; border-radius:5px;" 
+                       placeholder="请在这里手动输入题目内容..."></textarea>
+             <button onclick="useManualInput()" style="margin-top:10px; padding:10px 20px; background:#007bff; color:white; border:none; border-radius:5px;">使用手动输入</button>`;
+    }
+}
+
+// 使用手动输入
+function useManualInput() {
+    const manualInput = document.getElementById('manualInput');
+    if (manualInput && manualInput.value.trim()) {
+        questionText = manualInput.value.trim();
+        document.getElementById('questionText').textContent = questionText;
+        showToast('已使用手动输入的题目', 'success');
+    } else {
+        showToast('请输入题目内容', 'error');
+    }
+}
+
 // AI解题
 async function solveWithAI() {
     const aiKey = localStorage.getItem('aiKey');
     if (!aiKey) {
         showConfigModal();
+        showToast('请先配置DeepSeek API密钥', 'error');
         return;
     }
     
     if (!questionText) {
-        alert('请先获取题目');
+        showToast('请先获取题目内容', 'error');
         return;
     }
     
-    if (!selectedSubject || !selectedGrade) {
-        alert('请选择科目和学段');
+    if (!selectedSubject) {
+        showToast('请选择科目', 'error');
+        return;
+    }
+    
+    if (!selectedGrade) {
+        showToast('请选择学段', 'error');
         return;
     }
     
     // 显示加载状态
     document.querySelector('.ai-btn').style.display = 'none';
     document.getElementById('loadingAI').style.display = 'block';
+    document.getElementById('solution').style.display = 'none';
+    
+    // 显示详细的加载状态
+    const loadingSection = document.getElementById('loadingAI');
+    loadingSection.innerHTML = `
+        <div class="spinner-small"></div>
+        <h3 style="margin:15px 0 10px;">AI正在思考解题思路...</h3>
+        <p style="color:#666; margin-bottom:15px;">这可能需要10-30秒钟</p>
+        <div style="text-align:left; background:#f8f9fa; padding:15px; border-radius:8px; margin-top:10px;">
+            <p><strong>题目：</strong>${questionText.substring(0, 100)}${questionText.length > 100 ? '...' : ''}</p>
+            <p><strong>科目：</strong>${selectedSubject}</p>
+            <p><strong>学段：</strong>${selectedGrade}</p>
+        </div>
+    `;
     
     try {
-        // 构建提示词
-        const prompt = `你是一位${selectedGrade}的${selectedSubject}老师，请解答以下题目：
-
-题目：${questionText}
-
-要求：
-1. 给出详细解题步骤
-2. 解释关键概念
-3. 提供易错点提示
-4. 语言适合${selectedGrade}学生理解
-
-请开始解答：`;
+        showToast('正在调用DeepSeek AI解题...', 'info');
         
-        // 这里简化处理：实际应该调用DeepSeek API
-        // 由于是教学，我们先用模拟数据
-        setTimeout(() => {
-            // 模拟AI解答
-            const mockSolutions = {
-                "已知函数 f(x) = 2x² - 3x + 1，求 f(2) 的值。": 
-                    "解题步骤：\n1. 将x=2代入函数：f(2) = 2×2² - 3×2 + 1\n2. 计算平方：2²=4\n3. 代入计算：2×4=8，-3×2=-6\n4. 最终结果：8 - 6 + 1 = 3\n\n答案：f(2) = 3",
-                
-                "解方程：3x + 5 = 2x + 12":
-                    "解题步骤：\n1. 将方程移项：3x - 2x = 12 - 5\n2. 合并同类项：x = 7\n\n答案：x = 7",
-                
-                "计算：(2+3)×4÷2 = ?":
-                    "解题步骤：\n1. 先算括号内：2+3=5\n2. 乘以4：5×4=20\n3. 除以2：20÷2=10\n\n答案：10",
-                
-                "一个圆的半径是5cm，求面积（π取3.14）":
-                    "解题步骤：\n1. 圆面积公式：S = πr²\n2. 代入半径：S = 3.14 × 5²\n3. 计算平方：5²=25\n4. 最终计算：3.14 × 25 = 78.5\n\n答案：78.5cm²",
-                
-                "What is the capital of France?":
-                    "解题步骤：\n1. France is a country in Europe\n2. The capital city of France is Paris\n3. Paris is known as the 'City of Love'\n\n答案：The capital of France is Paris."
-            };
-            
-            const solution = mockSolutions[questionText] || 
-                "AI解答：\n1. 解析题目要求\n2. 应用相关知识\n3. 逐步计算\n4. 得出结论\n\n详细解答会根据具体题目变化。";
-            
+        // 调用我们的API接口
+        const response = await fetch('/api/solve', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                question: questionText,
+                subject: selectedSubject,
+                grade: selectedGrade,
+                apiKey: aiKey
+            })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
             // 显示解答
             document.getElementById('loadingAI').style.display = 'none';
             document.getElementById('solution').style.display = 'block';
-            document.getElementById('solutionText').textContent = solution;
+            document.getElementById('solutionText').innerHTML = 
+                data.answer.replace(/\n/g, '<br>').replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
             
-        }, 3000);
+            showToast('AI解题成功！', 'success');
+            
+            // 显示解题统计
+            if (data.usage) {
+                const usageInfo = `本次解题消耗：${data.usage.total_tokens || '未知'} tokens`;
+                showToast(usageInfo, 'info');
+            }
+            
+        } else {
+            throw new Error(data.error || 'AI解题失败');
+        }
         
     } catch (error) {
         console.error('AI解题失败:', error);
-        alert('AI解题失败，请检查网络和API配置');
         
-        // 恢复按钮
+        // 详细的错误信息
+        let errorMessage = 'AI解题失败';
+        if (error.message.includes('API Key') || error.message.includes('无效') || error.message.includes('过期')) {
+            errorMessage = 'API密钥无效或已过期，请重新配置';
+        } else if (error.message.includes('频率') || error.message.includes('quota') || error.message.includes('额度')) {
+            errorMessage = 'API调用额度已用完，请检查账户余额';
+        } else if (error.message.includes('网络')) {
+            errorMessage = '网络连接失败，请检查网络';
+        } else {
+            errorMessage = error.message;
+        }
+        
+        showToast('AI解题失败：' + errorMessage, 'error');
+        
+        // 恢复按钮，并提供重试选项
         document.querySelector('.ai-btn').style.display = 'block';
         document.getElementById('loadingAI').style.display = 'none';
+        document.getElementById('loadingAI').innerHTML = `
+            <div class="spinner-small"></div>
+            <p>AI正在思考...</p>
+        `;
+        
+        // 提供模拟解答作为备选
+        setTimeout(() => {
+            if (confirm('AI解题失败，是否查看示例解答？')) {
+                showExampleSolution();
+            }
+        }, 1000);
     }
+}
+
+// 显示示例解答（备用）
+function showExampleSolution() {
+    const exampleSolutions = {
+        "数学": `解题步骤示例：
+1. 仔细阅读题目，理解已知条件和求解目标
+2. 根据题目类型选择合适的公式或方法
+3. 逐步计算，注意单位和精度
+4. 检查结果是否合理
+
+示例答案：根据具体题目而定`,
+        "物理": `解题步骤示例：
+1. 分析物理过程，确定物理模型
+2. 列出已知条件和所求量
+3. 选择合适的物理公式
+4. 代入数值计算
+5. 分析结果的物理意义
+
+示例答案：根据具体题目而定`,
+        "化学": `解题步骤示例：
+1. 写出化学方程式并配平
+2. 计算物质的量关系
+3. 根据条件进行计算
+4. 注意单位换算和有效数字
+
+示例答案：根据具体题目而定`,
+        "语文": `解题思路示例：
+1. 理解题目要求，明确答题方向
+2. 分析文本内容，找出关键信息
+3. 组织语言，分点作答
+4. 检查是否完整回答了问题
+
+示例答案：根据具体题目而定`,
+        "英语": `解题思路示例：
+1. 仔细阅读题目要求
+2. 分析语法结构和词汇用法
+3. 注意时态和语态的一致性
+4. 检查拼写和语法错误
+
+示例答案：根据具体题目而定`
+    };
+    
+    const solution = exampleSolutions[selectedSubject] || `解题思路：
+1. 分析题目要求
+2. 运用相关知识
+3. 逐步推理
+4. 得出结论
+
+请配置正确的API密钥获取详细解答。`;
+    
+    document.getElementById('solution').style.display = 'block';
+    document.getElementById('solutionText').innerHTML = solution.replace(/\n/g, '<br>');
+    showToast('显示的是示例解答，请配置API获取真实解答', 'warning');
 }
 
 // 保存错题
 function saveQuestion() {
     if (!questionText) {
-        alert('没有题目可保存');
+        showToast('没有题目可保存', 'error');
         return;
     }
     
@@ -305,6 +478,7 @@ function saveQuestion() {
         subject: selectedSubject,
         grade: selectedGrade,
         question: questionText,
+        solution: document.getElementById('solutionText').textContent || '未保存解答',
         time: new Date().toLocaleString(),
         image: questionImage ? '有图片' : '无图片'
     };
@@ -316,12 +490,33 @@ function saveQuestion() {
     // 保存到本地存储
     localStorage.setItem('questionHistory', JSON.stringify(history));
     
-    alert('错题保存成功！');
+    showToast('错题保存成功！', 'success');
     
     // 可选：返回首页
     setTimeout(() => {
         goToStep(1);
         document.querySelector('.ai-btn').style.display = 'block';
         document.getElementById('solution').style.display = 'none';
-    }, 1000);
+        document.getElementById('loadingAI').style.display = 'none';
+        
+        // 重置状态
+        questionText = "";
+        questionImage = null;
+        selectedSubject = null;
+        selectedGrade = null;
+        
+        // 重置UI
+        document.querySelectorAll('.subject-btn').forEach(btn => btn.classList.remove('active'));
+        document.querySelectorAll('.grade-btn').forEach(btn => btn.classList.remove('active'));
+        document.getElementById('questionText').textContent = '这里会显示你的题目...';
+    }, 1500);
 }
+
+// 页面卸载前提示保存
+window.addEventListener('beforeunload', function (e) {
+    if (questionText && !localStorage.getItem('questionHistory')) {
+        // 如果有未保存的题目，提示用户
+        e.preventDefault();
+        e.returnValue = '您有未保存的错题，确定要离开吗？';
+    }
+});
