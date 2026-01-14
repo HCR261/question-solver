@@ -249,7 +249,7 @@ async function performOCR(file) {
         
         showToast('正在调用百度OCR识别文字...', 'info');
         
-        // 调用我们的API接口
+        // 调用Vercel Serverless API
         const response = await fetch('/api/ocr', {
             method: 'POST',
             headers: {
@@ -342,7 +342,7 @@ async function solveWithAI() {
     try {
         showToast('正在调用DeepSeek AI解题...', 'info');
         
-        // 调用我们的API接口
+        // 调用Vercel Serverless API
         const response = await fetch('/api/solve', {
             method: 'POST',
             headers: {
